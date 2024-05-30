@@ -1,0 +1,11 @@
+Method/Band (a0),z,i,g,r
+sin_1st_harm a0 fittable,4.8,8.4,5.8,8.2
+sin_1st_harm,9.2 (14.3),8.8(14.3) ,7(14.3),8.6(14.3)
+sin_1st_harm simbad mean a0,9.4(14.3070),8.8(14.2903),10.2(14.7030),6.8(14.1269)
+sin_2nd_harm a0 fittable,5.2,6.2,5.4,5.8
+sin_2nd_harm,10.8(14.3),10.4(14.3),8(14.3),10.6(14.3)
+sin_2nd_harm simbad mean a0,11(14.3070),10.2(14.2903),12.8(14.7030),6.8(14.1269)
+periodic gaussian 1st harm,5.4(min y_data),5.6(min y_data),5.2(min y_data),5.8(min y_data)
+periodic gaussian 1st a0 fittable,5,5.6,5.8,8.2
+periodic gaussian 2nd harm,5.2(min y_data),8.8(min y_data),9(min y_data),8.8(min y_data)
+periodic gaussian 2nd a0 fittable,7.4,8,9.6,8.8
