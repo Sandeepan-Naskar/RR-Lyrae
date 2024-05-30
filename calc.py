@@ -18,7 +18,12 @@ mag_sun = 4.83
 # b_V = 0.23 ± 0.05
 def period_lum(period):
     #absolute magnitude in V band
-    mag = -0.23 + 0.75*math.log10(period/0.55)
+    # mag = -1.096 - 2.43*(math.log10(period/24) - 0.127)
+    mag = -.961 - 2.73*(math.log10(period/24) - 0.127)
+
+    z = 0.002
+    mag =0.4711-1.1318*math.log10(period/24)+ 0.2053*math.log10(z)
+    # mag = -0.23 + 0.75*(math.log10(period/24))
     return mag
 
 def mag_lum(mag):
@@ -26,11 +31,16 @@ def mag_lum(mag):
     return lum
 
 def radius(period):
-    radius = radius_sun*(10**(0.75*math.log10(period)-0.38))
+    # radius = radius_sun*(10**(0.75*math.log10(period/24)-0.38))
+    # radius = 2*radius_sun*math.sqrt(period/24)
+    Z = 0.002
+    radius = 10**(0.774 + 0.58*math.log10(period/24) - 0.035*math.log10(Z)) * radius_sun
     return radius
 
-def mass(period):
-    mass = mass_sun*(10**(0.61-1.25*math.log10(period)))
+def mass(lum):
+    # l/l. = 16.7 (m/m.)^0.93 
+    # mass = mass_sun*(10**(0.61-1.25*math.log10(period/24)))
+    mass = mass_sun*(lum/(16.7*lum_sun))**(1/.93)
     return mass
 
 def temp(lum, radius):
@@ -86,30 +96,52 @@ with open('periods.csv', mode ='r')as file:
         
         period_dict[name] = [period_z, period_i, period_g, period_r]
 
-for key in period_dict:
-    print("Method: " + key)
+# for key in period_dict:
+#     print("Method: " + key)
+
+#     print("Period: " + str([period_dict[key][i] for i in range(4)]))
     
-    abs_mag_z = [period_lum(period_dict[key][i]) for i in range(4)]
-    print("Abs Magnitude: " + str(abs_mag_z))
+#     abs_mag_z = [period_lum(period_dict[key][i]) for i in range(4)]
+#     print("Apparent Magnitude: " + str([14.3 for i in range(4)]))
+#     print("Abs Magnitude: " + str(abs_mag_z))
 
-    lum_z = [mag_lum(abs_mag_z[i]) for i in range(4)]
-    print("Luminosity: " + str(lum_z))
+#     lum_z = [mag_lum(abs_mag_z[i]) for i in range(4)]
+#     print("Luminosity: " + str(lum_z))
 
-    radius_z = [radius(period_dict[key][i]) for i in range(4)]
-    print("Radius: " + str(radius_z))
+#     radius_z = [radius(period_dict[key][i]) for i in range(4)]
+#     print("Radius: " + str(radius_z))
 
-    mass_z = [mass(period_dict[key][i]) for i in range(4)]
-    print("Mass: " + str(mass_z))
+#     mass_z = [mass(lum_z[i]) for i in range(4)]
+#     print("Mass: " + str(mass_z))
 
-    temp_z = [temp(lum_z[i], radius_z[i]) for i in range(4)]
-    print("Temperature: " + str(temp_z))
+#     temp_z = [temp(lum_z[i], radius_z[i]) for i in range(4)]
+#     print("Temperature: " + str(temp_z))
 
-    spectral_type_z = [spectral_type(temp_z[i]) for i in range(4)]
-    print("Spectral type: " + str(spectral_type_z))
+#     spectral_type_z = [spectral_type(temp_z[i]) for i in range(4)]
+#     print("Spectral type: " + str(spectral_type_z))
 
-    # print(list(y_data.items())[i][1])
-    distance_z = [distance(abs_mag_z[i], np.mean(list(y_data.items())[i][1])) for i in range(4)]
-    print("Distance(pc): " + str(distance_z))
-    print("Parallax: " + str(1000*1/np.array(distance_z)) + " milli-arcsec")
+#     # print(list(y_data.items())[i][1])
+#     distance_z = [distance(abs_mag_z[i], 14.3) for i in range(4)]
+#     print("Distance(pc): " + str(distance_z))
+#     print("Parallax: " + str(1000*1/np.array(distance_z)) + " milli-arcsec")
 
-    print("---------------------------------")
+#     print("---------------------------------")
+
+period = (10.2+11+12.8)/3
+abs_mag = period_lum(period)
+lum = mag_lum(abs_mag)
+radius = radius(period)
+mass = mass(lum)
+temp = temp(lum, radius)
+spectral_type = spectral_type(temp)
+distance = distance(abs_mag, 14.3)
+print("Average Period: " + str(period))
+print("Average Apparent Magnitude: " + str(14.3))
+print("Average Abs Magnitude: " + str(abs_mag))
+print("Average Luminosity: " + str(lum/lum_sun))
+print("Average Radius: " + str(radius/radius_sun))
+print("Average Mass: " + str(mass))
+print("Average Temperature: " + str(temp))
+print("Average Spectral type: " + str(spectral_type))
+print("Average Distance(pc): " + str(distance))
+print("Average Parallax: " + str(1000*1/distance) + " milli-arcsec")

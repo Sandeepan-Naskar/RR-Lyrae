@@ -173,9 +173,6 @@ import matplotlib.pyplot as plt
 # print('Original parameters:')
 # display(Math('a_0={:.2f}, a_1={:.2f}, \\omega={:.2f}, \\phi={:.2f}'.format(*[10.0, 5.0, 3.0, 2.0])))
 
-# def sawtooth(x, a0, a1, w1, phi1):
-#     return signal.sawtooth(w1 * x + phi1, 0.5) * a1 + a0
-
 
 def sin_harm_2nd_with_w1(x, a0, a1, w1, phi1):
     # a1 = 0.8
@@ -192,20 +189,39 @@ if __name__ == "__main__":
     t = [0, 0, 0, 0]
     a_opt = [0, 0, 0, 0]
     for k, band in enumerate(['z', 'i', 'g', 'r']):
-        def sin_harm_2nd(x, a1, phi1, a2, phi2):
-            a0 = 14.3
+        def sawtooth(x, a1, phi1, q):
             w1 = 2 * np.pi / (3600*i)
-            # if k==0:
-            #     a0 = 14.3070
-            #     # w2 = 0.5
-            # elif k==1:
-            #     a0 = 14.2903
-            #     # w2 = 0.32
-            # elif k==2:
-            #     a0 = 14.7030
-            #     # w2 = 0.28
-            # elif k==3:
-            #     a0 = 14.1269
+            a0 = 14.3
+            # q =0.5
+            if k==0:
+                a0 = 14.18
+                # q = 0.5
+            elif k==1:
+                a0 = 14.2
+                # q = 0.3
+            elif k==2:
+                a0 = 14.7030
+                # q = 0.4
+            elif k==3:
+                a0 = 14.15
+                # q = 0.5
+
+            return signal.sawtooth(w1 * x + phi1, q) * a1 + a0
+        
+        def sin_harm_2nd(x, a1, phi1, a2, phi2):
+            # a0 = 14.3
+            w1 = 2 * np.pi / (3600*i)
+            if k==0:
+                a0 = 14.3070
+                # w2 = 0.5
+            elif k==1:
+                a0 = 14.2903
+                # w2 = 0.32
+            elif k==2:
+                a0 = 14.7030
+                # w2 = 0.28
+            elif k==3:
+                a0 = 14.1269
                 # w2 = 0.29
             # a0 = (max(y_data[band])+min(y_data[band]))/2
             # return signal.sawtooth(w1 * x + phi1, w2) * a1 + a0
@@ -224,7 +240,7 @@ if __name__ == "__main__":
         
         # g = np.vectorize(g)
 
-        def per_gaus(x, a1, phi, kappa):
+        def per_gaus(x, a1, phi, kappa, a2):
             w = 2*np.pi/(3600*i)
             a0 = min(y_data[band])
             # if k==0:
@@ -239,23 +255,28 @@ if __name__ == "__main__":
             # elif k==3:
             #     a0 = 14.6
             #     # w2 = 0.29
-            return a0 + a1*np.exp(kappa*np.cos(w*x + phi))/(1 + kappa**2/4 + kappa**4/64 + kappa**6/2304)
-            # + a2*np.exp(kappa*np.cos(w*x + phi - np.pi))/(1 + kappa**2/4 + kappa**4/64 + kappa**6/2304)
+            return a0 + a1*np.exp(kappa*np.cos(w*x + phi))/(1 + kappa**2/4 + kappa**4/64) + a2*np.exp(kappa*np.cos(w*x + phi - np.pi))/(1 + kappa**2/4 + kappa**4/64)
 
         error = np.inf
         # for a in np.arange(13.6, 14.9, 0.1):
         for i in np.arange(4, 14, 0.2):
-            params, params_covariance = optimize.curve_fit(sin_harm_2nd, x_data[band], y_data[band],  maxfev=100000, sigma=y_error[band])
+            param_bounds=([-np.inf,-np.inf,0],[np.inf,np.inf,1])
+            params, params_covariance = optimize.curve_fit(sawtooth, x_data[band], y_data[band],  maxfev=100000, sigma=y_error[band], bounds=param_bounds)
+  
+            # params, params_covariance = optimize.curve_fit(sin_harm_2nd, x_data[band], y_data[band],  maxfev=100000, sigma=y_error[band])
 
             x_data[band] = np.array(x_data[band])
-            y_fit1 = sin_harm_2nd(np.arange(min(x_data[band]), max(x_data[band]), 200), *params)
-            y_fit2 = sin_harm_2nd(x_data[band], *params)
+            # y_fit1 = sin_harm_2nd(np.arange(min(x_data[band]), max(x_data[band]), 200), *params)
+            # y_fit2 = sin_harm_2nd(x_data[band], *params)
 
             # y_fit1 = g(np.linspace(min(x_data[band]), max(x_data[band]), 30), *params)
             # y_fit2 = g(x_data[band], *params)
 
             # y_fit1 = per_gaus(np.linspace(min(x_data[band]), max(x_data[band]), 30), *params)
             # y_fit2 = per_gaus(x_data[band], *params)
+
+            y_fit1 = sawtooth(np.linspace(min(x_data[band]), max(x_data[band]), 30), *params)
+            y_fit2 = sawtooth(x_data[band], *params)
 
             # print('chi_square_error({}):'.format(band))
 
@@ -267,26 +288,28 @@ if __name__ == "__main__":
             # print('Fitted parameters({}):'.format(band))
             # print(params)
 
-
+            import seaborn as sns
+            sns.set_theme()
             plt.gca().invert_yaxis() 
-            plt.errorbar(x_data[band], y_data[band], yerr=y_error[band], fmt='o-', label='data with error')
-            plt.plot(np.arange(min(x_data[band]), max(x_data[band]), 200), y_fit1, label='fit')
-            # plt.plot(np.linspace(min(x_data[band]), max(x_data[band]), 30), y_fit1, label='fit')
+
+            plt.errorbar(x_data[band], y_data[band], yerr=y_error[band], marker='s', label='data with error')
+            # plt.plot(np.arange(min(x_data[band]), max(x_data[band]), 200), y_fit1, label='fit')
+            plt.plot(np.linspace(min(x_data[band]), max(x_data[band]), 30), y_fit1, label='fit')
             plt.plot(x_data[band], y_fit2, label='fit (only at data points))')
             plt.legend(loc='best')
 
-            plt.title('time: {:.2f}; chi_square error: {:.5f}'.format(i, error))
-            plt.savefig(band+'.png')
+            plt.title('Band({})\ntime: {:.2f}; chi_square error: {:.5f}'.format(band, i, error))
+            plt.savefig('sawtooth_'+band+'.png')
             plt.close()
 
             ### uncomment this after you have a good fit and fill it with the values you found
-            if k==0 and abs(t[k]-10.8)<0.01:
+            if k==0 and abs(t[k]-7.8)<0.01:
                 break
-            if k==1 and abs(t[k]-10.4)<0.01:
+            if k==1 and abs(t[k]-12.4)<0.01:
                 break
-            if k==2 and abs(t[k]-8)<0.01:
+            if k==2 and abs(t[k]-11.4)<0.01:
                 break
-            if k==3 and abs(t[k]-10.6)<0.01:
+            if k==3 and abs(t[k]-8)<0.01:
                 break
 
 
